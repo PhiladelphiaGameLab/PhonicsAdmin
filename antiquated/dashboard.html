@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title>Phonics Teacher's Portal</title>
+	<!-- jQuery -->
+	<script src="js/jquery.js"></script>
+	<!-- DataTables  -->
+	<script type="text/javascript" charset="utf8" src="js/jquery.dataTables.js"></script>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="css/jquery.dataTables.css">
+	
+	<!-- Bootstrap Core CSS -->
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+
+	<!-- Custom CSS -->
+	<link href="css/sb-admin.css" rel="stylesheet">
+
+	<!-- Morris Charts CSS -->
+	<link href="css/plugins/morris.css" rel="stylesheet">
+
+	<!-- Custom Fonts -->
+	<link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+		<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+		<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+	<![endif]-->
+
+<script>
+var teacherRecord;// to store the mongo record corresponding to this teacher
+var studentsRecord;
+var teacherName = "Nathan";// need to specific the teacher based on the access token
+			   // for now it is set to Nathan by default
+
+function getTeacherNameFromUrl(){
+	return "Nathan"
+}
+
+function getJsonFromUrl() {
+  var query = location.search.substr(1);
+  var result = {};
+  query.split("&").forEach(function(part) {
+	var item = part.split("=");
+	result[item[0]] = decodeURIComponent(item[1]);
+  });
+  return result;
+}
+
+///obtain the start date of the current week
+var now = new Date();                    //current date
+var nowDayOfWeek = now.getDay();         //the day of the current week
+var nowDay = now.getDate();              //current day
+var nowMonth = now.getMonth();           //current month
+var nowYear = now.getYear();             //current year
+nowYear += (nowYear < 2000) ? 1900 : 0; 
+
+//convert datetime to string fromat：yyyy-MM-dd   
+function formatDate(date) {    
+	var myyear = date.getFullYear();   
+	var mymonth = date.getMonth()+1;   
+	var myweekday = date.getDate();    
+	   
+	if(mymonth < 10){   
+		mymonth = "0" + mymonth;   
+	}    
+	if(myweekday < 10){   
+		myweekday = "0" + myweekday;   
+	}   
+	return (myyear+"-"+mymonth + "-" + myweekday);    
+}
+
+
+//obtain the start date of the current week
+function getWeekStartDate() {    
+	var weekStartDate = new Date(nowYear, nowMonth, nowDay - nowDayOfWeek);    
+	// var time = 1421848642;                              
+	// var real_time = new Date(time * 1000);
+	// console.log(real_time < weekStartDate);
+	//return formatDate(weekStartDate);
+	return weekStartDate;   
+}    
+  
+//obtain the end date of the current week
+function getWeekEndDate() {    
+	var weekEndDate = new Date(nowYear, nowMonth, nowDay + (6 - nowDayOfWeek));    
+	//return formatDate(weekEndDate);
+	return weekEndDate;   
+}    
+
+function drawDonut(){
+	//scaling
+	var scoreA = 0;
+	var scoreB = 0;
+	var scoreC = 0;
+	var scoreD = 0; 
+	var scoreE = 0;
+	for(var _id in studentsRecord){
+		var courses = studentsRecord[_id]["courses"];
+		for(i=0;i<courses.length;i++){//traverse tiers
+			var lessons = courses[i]["contents"];
+			for(j=0;j < lessons.length;j++){
+				var cards = lessons[j]["cards"];
+				for(k =0; k< cards.length;k++){
+					if(cards[k]["score"] > 4&&cards[k]["score"]<=5){
+						scoreA++;
+					}
+					else if(cards[k]["score"] > 3&&cards[k]["score"]<=4){
+						scoreB++;
+					}
+					else if(cards[k]["score"] > 2&&cards[k]["score"]<=3){
+						scoreC++;
+					}
+					else if(cards[k]["score"] > 1&&cards[k]["score"]<=2){
+						scoreD++;
+					}
+					else if(cards[k]["score"] > 0&&cards[k]["score"]<=1){
+						scoreE++;
+					}
+				}
+			}
+		}
+									
+	}
+	Morris.Donut({
+	element: "grade_distribution",
+	data: [
+			{label: "A", value: scoreA},
+			{label: "B", value: scoreB},
+			{label: "C", value: scoreC},
+			{label: "D", value: scoreD},
+			{label: "E", value: scoreE}
+				]
+	});	
+}
+
+function drawTable(){
+
+	console.log(studentsRecord);
+	var table = $('#student_progress_table').DataTable();
+	for(var _id in studentsRecord){
+
+		var date = new Date(studentsRecord[_id]["last_time_visited"]["sec"]*1000);
+		var cell1 = studentsRecord[_id]["student_name"];
+		var cell2 = formatDate(date);
+		var cell3 = 0;
+		var cell4 = studentsRecord[_id]["total_score"];
+		table.row.add( [
+	            cell1 ,
+	            cell2 ,
+	            cell3 ,
+	            cell4 
+	        ] ).draw();
+		//var newTable = document.getElementById("student_progress_table");
+		//sorttable.makeSortable(document.getElementById('student_progress_table'));
+	}
+
+
+
+}
+
+function Ajax(url, data, callback){
+		var http = new XMLHttpRequest();
+		http.onreadystatechange=function(){
+				if(http.readyState==4 && http.status==200){
+						callback(http.responseText);
+				}
+		}
+		urlBase = "http://demo.philadelphiagamelab.org/Lux/";
+		http.open("POST", urlBase + url, true);
+		http.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+		http.send(JSON.stringify(data));
+	}
+
+
+var url = getJsonFromUrl();
+console.log(url.access_token);
+var group;
+ 
+
+if(!url.hasOwnProperty("access_token")){
+		window.location = "/PhonicsAdmin/index.html";
+}
+
+//fetch teacher's record
+Ajax("../Lux/Analytics/queryNoAuth.php", {"access_token": url.access_token, "query": {"teacher_name": teacherName}}
+						,function(data){
+				
+			var result = JSON.parse(data);
+			teacherRecord = result[1];	
+				for (var prop in teacherRecord) {
+					if (teacherRecord.hasOwnProperty(prop)) {
+				 teacherRecord = teacherRecord[prop];
+					}
+			}
+			//console.log(teacherRecord);			
+						})
+
+//fetch student records with teacherName
+Ajax("../Lux/Analytics/queryNoAuth.php", {"access_token": url.access_token, "query": {"teacher": teacherName}}
+						,function(data){
+				var result = JSON.parse(data);
+				studentsRecord = result[1];
+				//console.log(students_record);
+				//fill in the information in the first row
+				document.getElementById("number_of_students").innerHTML =teacherRecord["student_list"].length;
+				var weekStartDate = getWeekStartDate();
+				var weekEndDate = getWeekEndDate();
+				var numOfProgress = 0;
+				var numOfLessonsPassed = 0;
+				var numOfLessonsFailed = 0;
+
+				//console.log(students_record["0"]);
+				for(var _id in studentsRecord){
+					console.log(studentsRecord[_id]);
+					var visitedDate = new Date(studentsRecord[_id]["last_time_visited"]["sec"]*1000);
+					//console.log(visitedDate);
+
+					//check if the student visited this website this week
+					if(visitedDate <= weekEndDate && visitedDate > weekStartDate){
+						numOfProgress++;
+						var courses = studentsRecord[_id]["courses"];
+						for(j=0;j<courses.length;j++){
+							//console.log(courses[j]);// Tier
+							var lessons = courses[j]["contents"];// different lessons within one tier
+							for(k=0;k < lessons.length;k++){
+								//potential failure for the current week
+								if(lessons[k]["completed"]== false){
+									//console.log("not finished");
+									var cards = lessons[k]["cards"];//multiple cards for each lesson
+									for(m =0; m< cards.length;m++)
+									{
+										//console.log(cards[m]["last_modified_time"]);
+										if(cards[m]["score"] <= 3 && cards[m]["last_modified_time"]!= null )//means uncompleted
+										{
+											var card_timestamp = cards[m]["last_modified_time"]["sec"];
+											var card_tried_time = new Date(card_timestamp*1000);
+											if(card_tried_time > weekStartDate && card_tried_time <= weekEndDate)
+											{
+												numOfLessonsFailed++;
+												break;
+											}
+										}
+									}
+								}
+								//check if passed in current week
+								else if(lessons[k]["completed"]== true){
+									var cards = lessons[k]["cards"];//multiple cards for each lesson
+									for(m =0; m< cards.length;m++)
+									{
+										//console.log(cards[m]["last_modified_time"]);
+										if(cards[m]["score"] > 3 && cards[m]["last_modified_time"]!= null )//means uncompleted
+										{
+											var card_timestamp = cards[m]["last_modified_time"]["sec"];
+											var card_tried_time = new Date(card_timestamp*1000);
+											if(card_tried_time > weekStartDate && card_tried_time <= weekEndDate)
+											{
+												numOfLessonsPassed++;
+												break;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				document.getElementById("lessons_passed_this_week").innerHTML = numOfLessonsPassed;
+				document.getElementById("lessons_failed_this_week").innerHTML = numOfLessonsFailed;
+				if(numOfLessonsPassed+numOfLessonsFailed == 0){
+					document.getElementById("percentage_passed_this_week").innerHTML = "N/A";
+				}
+				else
+					document.getElementById("percentage_passed_this_week").innerHTML = 100*numOfLessonsPassed/(numOfLessonsPassed+numOfLessonsFailed)+"%";
+				
+				drawTable();
+				//draw donut chart
+				drawDonut();
+				
+				})
+
+
+window.onload = function(){
+		document.getElementById("lbuilder").href += "?access_token="+url.access_token;
+		document.getElementById("dashb").href += "?access_token="+url.access_token;
+
+}
+	
+
+</script>
+
+
+</head>
+
+<body>
+
+	<div id="wrapper">
+
+		<!-- Navigation -->
+		<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" href="index.html">Phonics</a>
+			</div>
+			<!-- Top Menu Items -->
+			<ul class="nav navbar-right top-nav">
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> Teacher Name <b class="caret"></b></a>
+					<ul class="dropdown-menu">
+						<li>
+							<a href="#"><i class="fa fa-fw fa-user"></i> Profile</a>
+						</li>
+						<li class="divider"></li>
+						<li>
+							<a href="index.html"><i class="fa fa-fw fa-power-off"></i> Log Out</a>
+						</li>
+					</ul>
+				</li>
+			</ul>
+
+			<!-- Sidebar Menu Items - These collapse to the responsive navigation menu on small screens -->
+			<div class="collapse navbar-collapse navbar-ex1-collapse">
+				<ul class="nav navbar-nav side-nav">
+					<li class="active">
+						<a id="dashb" href="dashboard.html"><i class="fa fa-fw fa-dashboard"></i> Dashboard</a>
+					</li>
+					<li>
+						<a id="lbuilder" href="builder.html"><i class="fa fa-fw fa-table"></i> Lesson Builder</a>
+					</li>
+					<li>
+						<a href="javascript:;" data-toggle="collapse" data-target="#class"><i class="fa fa-fw fa-arrows-v"></i> Students<i class="fa fa-fw fa-caret-down"></i></a>
+						<ul id="class" class="collapse">
+							<li>
+								<a href="class.html">Class</a>
+							</li>
+							<li>
+								<a href="class.html?student=">Student Name</a>
+							</li>
+							<li>
+								<a href="class.html?student=">Student Name</a>
+							</li>
+							<li>
+								<a href="class.html?student=">Student Name</a>
+							</li>
+							<li>
+								<a href="class.html?student=">Student Name</a>
+							</li>
+							<li>
+								<a href="class.html?student=">Student Name</a>
+							</li>
+							<li>
+								<a href="class.html?student=">Student Name</a>
+							</li>
+						</ul>
+					</li>
+					<li>
+						<a href="classManagement.html"><i class="fa fa-fw fa-edit"></i> Class Manager</a>
+					</li>
+				</ul>
+			</div>
+			<!-- /.navbar-collapse -->
+		</nav>
+
+		<div id="page-wrapper">
+
+			<div class="container-fluid">
+
+				<!-- Page Heading -->
+				<div class="row">
+					<div class="col-lg-12">
+						<h1 class="page-header">
+							Dashboard <small>Statistics Overview</small>
+						</h1>
+					</div>
+				</div>
+				<!-- /.row -->
+
+				<div class="row">
+					<div class="col-lg-12">
+						<!-- Put Alert Text HERE -->
+				</div>
+				</div>
+				<!-- /.row -->
+
+				<div class="row">
+					<div class="col-lg-3 col-md-6">
+						<div class="panel panel-primary">
+							<div class="panel-heading">
+								<div class="row">
+									<div class="col-xs-9 text-right">
+										<div class="huge" id ="number_of_students">15</div>
+										<div>Students in Class</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-lg-3 col-md-6">
+						<div class="panel panel-green">
+							<div class="panel-heading">
+								<div class="row">
+									<div class="col-xs-3">
+										<i class="fa fa-tasks fa-5x"></i>
+									</div>
+									<div class="col-xs-9 text-right">
+										<div class="huge" id = "lessons_passed_this_week" ></div>
+										<div>Lessons Passed This Week</div>
+									</div>
+								</div>
+							</div>
+							<a href="#student_progress_table">
+								<div class="panel-footer">
+									<span class="pull-left">View Details</span>
+									<span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+									<div class="clearfix"></div>
+								</div>
+							</a>
+						</div>
+					</div>
+					<div class="col-lg-3 col-md-6">
+						<div class="panel panel-red">
+							<div class="panel-heading">
+								<div class="row">
+									<div class="col-xs-3">
+										<i class="fa fa-support fa-5x"></i>
+									</div>
+									<div class="col-xs-9 text-right">
+										<div class="huge" id = "lessons_failed_this_week" ></div>
+										<div>Lessons Failed This Week</div>
+									</div>
+								</div>
+							</div>
+							<a href="#student_progress_table">
+								<div class="panel-footer">
+									<span class="pull-left">View Details</span>
+									<span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+									<div class="clearfix"></div>
+								</div>
+							</a>
+						</div>
+					</div>
+			<div class="col-lg-3 col-md-6">
+						<div class="panel panel-yellow">
+							<div class="panel-heading">
+								<div class="row">
+									<div class="col-xs-3">
+										<i class="fa fa-shopping-cart fa-5x"></i>
+									</div>
+									<div class="col-xs-9 text-right">
+										<div class="huge"  id = "percentage_passed_this_week"></div>
+										<div>Percentage Passed This Week</div>
+									</div>
+								</div>
+							</div>
+							<a href="#student_progress_table">
+								<div class="panel-footer">
+									<span class="pull-left">View Details</span>
+									<span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+									<div class="clearfix"></div>
+								</div>
+							</a>
+						</div>
+					
+				</div>
+				<!-- /.row -->
+
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h3 class="panel-title"><i class="fa fa-bar-chart-o fa-fw"></i> Overall Student Progress</h3>
+							</div>
+							<div class="panel-body">
+				<!-- Weekly Progress Chart goes here -->
+								<div id="morris-area-chart"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- /.row -->
+
+				<div class="row">
+					<div class="col-lg-6">
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h3 class="panel-title"><i class="fa fa-long-arrow-right fa-fw"></i> Grade Distribution</h3>
+							</div>
+							<div class="panel-body">
+								<div id="grade_distribution"></div>
+								<div class="text-right">
+					<!-- Grade Distribution Goes here --> 
+									<a href="#">View Details <i class="fa fa-arrow-circle-right"></i></a>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-lg-6">
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h3 class="panel-title"><i class="fa fa-money fa-fw"></i> Student Progress</h3>
+							</div>
+							<div class="panel-body">
+								<div class="table-responsive">
+									<table cellpadding="0" cellspacing="0" border="0" class="display" id = "student_progress_table" >
+										<thead>
+											<tr>
+												<th>Student Name</th>
+												<th>Date Taken</th>
+												<th>Lesson Number</th>
+												<th>Score</th>
+											</tr>
+										</thead>
+
+									</table>
+								</div>
+								<div class="text-right">
+									<a href="#">View All Student Progresses <i class="fa fa-arrow-circle-right"></i></a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- /.row -->
+
+			</div>
+			<!-- /.container-fluid -->
+
+		</div>
+		<!-- /#page-wrapper -->
+
+	</div>
+	<!-- /#wrapper -->
+
+	<!-- Bootstrap Core JavaScript -->
+	<script src="js/bootstrap.min.js"></script>
+
+
+
+	<!-- Morris Charts JavaScript -->
+	<script src="js/plugins/morris/raphael.min.js"></script>
+	<script src="js/plugins/morris/morris.min.js"></script>
+	<script src="js/plugins/morris/morris-data.js"></script>
+
+
+
+	<script>
+		// $(document).ready(function() {
+		//     $('#student_progress_table').dataTable( {
+
+
+  //   			}
+		//     } );
+		// } );
+	
+	</script>
+</body>
+
+</html>

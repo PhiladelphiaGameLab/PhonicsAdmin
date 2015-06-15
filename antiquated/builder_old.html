@@ -1,0 +1,1215 @@
+<html>
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Phonics Lesson Builder</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="css/sb-admin.css" rel="stylesheet">
+
+    <!-- Morris Charts CSS -->
+    <link href="css/plugins/morris.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+<script src="js/jquery.js"></script>
+<script>
+
+function Ajax(url, data, callback){ // done and functional
+        var http = new XMLHttpRequest();
+        http.onreadystatechange=function(){
+                if(http.readyState==4 && http.status==200){
+                        console.log(http.responseText);
+                        callback(JSON.parse(http.responseText));
+                }
+        }
+        urlBase = "http://demo.philadelphiagamelab.org/Lux/";
+        http.open("POST", urlBase + url, true);
+        http.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        http.send(JSON.stringify(data));
+  }
+function AjaxUpload(fileHandler){// done and functional
+        var http = new XMLHttpRequest();
+        http.onreadystatechange=function(){
+                if(http.readyState==4 && http.status==200){
+                        console.log(http.responseText);
+                }
+        }
+        urlBase = "http://demo.philadelphiagamelab.org/Lux/";
+     	
+	/* Create a FormData instance */
+      	var formData = new FormData();
+      	
+	/* Add the file */
+
+http.upload.onprogress = function(e) {
+    if (e.lengthComputable) {
+      var percentComplete = (e.loaded / e.total) * 100;
+      console.log(percentComplete + '% uploaded');
+    }
+  };
+
+
+/* Display the image of the file, for now 
+if ( window.FileReader ) {
+  reader = new FileReader();
+  reader.onloadend = function (e) { 
+	var list = fileHandler.parentNode,
+	li   = document.createElement("li"),
+	img  = document.createElement("img");
+	img.src = e.target.result;
+	li.appendChild(img);
+	list.appendChild(li);
+  };
+  reader.readAsDataURL(fileHandler.files[0]);
+}
+*/
+      	formData.append("fileToUpload", fileHandler.files[0]);
+	
+	/* Send the Request to the server */
+        http.open("POST", urlBase + "Upload/upload.php?access_token="+url.access_token);
+      	//http.setRequestHeader("Content-Type", "multipart/form-data; charset=UTF-8");
+      	http.send(formData);  /* Send to server */ 
+}
+
+function getJsonFromUrl() {// done and functional
+  var query = location.search.substr(1);
+  var result = {};
+  query.split("&").forEach(function(part) {
+    var item = part.split("=");
+    result[item[0]] = decodeURIComponent(item[1]);
+  });
+  return result;
+}
+
+var url = getJsonFromUrl();
+console.log(url.access_token);
+var group;
+var count = 1;
+var valcnt = 0;
+var wordcount = [0];
+if(!url.hasOwnProperty("access_token")){
+        window.location = "/PhonicsAdmin/index.html";
+}
+
+
+/*---------------- LOADS THE WHOLE PAGE -----------------*/
+Ajax("../Lux/Assets/query.php", {access_token:url.access_token, query:{type:"lesson"}}, 
+function(data){
+	var defaultpanel = document.getElementsByClassName("newpanel")[0];
+	console.log(data[1]);
+	var obj = data[1];
+	var wordnum;
+        for(var key in obj){	
+		wordnum = count;
+		count++;
+		wordcount.push(0);
+		var newpanel = defaultpanel.cloneNode(true);
+
+		newpanel.getElementsByClassName("hidden-head")[0].id = "heading"+count;
+		
+		newpanel.getElementsByClassName("hidden-title")[0].innerHTML =" <a class=\"lesson_title"+count+"\" data-toggle=\"collapse\" data-parent=\"#accordion\" href=\"#collapse"+count+"\" aria-expanded=\"true\" aria-controls=\"collapse"+count+"\" onclick=\"loadLesson("+count+","+wordnum+")\" >"+obj[key].name+"</a>";
+
+
+		newpanel.getElementsByClassName("hidden-body")[0].setAttribute("aria-labelledby", "heading"+count);
+		newpanel.getElementsByClassName("hidden-body")[0].id = "collapse"+count;
+		newpanel.getElementsByClassName("hidden-body")[0].labelledby = "heading"+count;
+		
+		newpanel.getElementsByClassName("hidden-name")[0].className = "lessonname form-control";
+		newpanel.getElementsByClassName("lessonname")[0].id = "new-name"+wordnum;
+		newpanel.getElementsByClassName("hidden-selector")[0].className = "imageselect"+wordnum+" form-control";
+		newpanel.getElementsByClassName("hidden-tier")[0].id = "new-tier"+wordnum;
+		newpanel.getElementsByClassName("hidden-tier")[0].className = "tiernum form-control";
+		newpanel.getElementsByClassName("hid-nws")[0].id = "NewWordSpace"+wordnum;
+		newpanel.getElementsByClassName("hid-nws")[0].className = "";
+		newpanel.getElementsByClassName("hid-nw")[0].id = "hidden-newword"+wordnum;
+		newpanel.getElementsByClassName("hid-nw")[0].className = "";
+		newpanel.getElementsByClassName("newword")[0].className = "newword"+wordnum;
+		newpanel.getElementsByClassName("wordcheck")[0].className = "wordcheck"+wordnum+" form-group";
+		newpanel.getElementsByClassName("wordlabel")[0].className = "wordlabel"+wordnum+" control-label";
+		newpanel.getElementsByClassName("wordinput")[0].className = "wordinput"+wordnum+" form-control";
+		newpanel.getElementsByClassName("ruleselect")[0].className = "ruleselect"+wordnum+" form-control";
+		newpanel.getElementsByClassName("ruleselect")[1].className = "ruleselect"+wordnum+" form-control";
+		newpanel.getElementsByClassName("add")[0].innerHTML = "<a class=\"btn\" onclick=\"addWord("+wordnum+")\"><span class=\"glyphicon glyphicon-plus\"></a> <a class=\"btn\" onclick=\"subWord("+wordnum+")\"><span class=\"glyphicon glyphicon-minus\"></a>";
+		newpanel.getElementsByClassName("pull-right")[0].innerHTML = "<a class=\"btn btn-default check4word\" onclick=\"checkWords("+wordnum+")\">Check Words</a>";
+		newpanel.getElementsByClassName("sub-less")[0].innerHTML = "<div class=\"pull-right\"><a class=\"btn btn-default\" onclick=\"deleteLesson("+count+","+wordnum+")\">Delete Lesson</a>&nbsp;&nbsp;<a class=\"btn btn-default\" onclick=\"updateLesson("+count+","+wordnum+")\">Update Lesson</a></div>";
+		//Need to change the function parameters for addword and checkforword
+		newpanel.style.display = "initial";	
+		document.getElementById("PanelSpace").appendChild(newpanel);
+	}
+	console.log(wordcount.length);
+});
+//--------------------------Word Changes------------------------//
+function addWord(num){// done and functional
+        var defaultword;
+	defaultword = document.getElementById("hidden-newword"+num);
+        var newword = defaultword.cloneNode("true");
+	newword.className = "newword"+num;
+	newword.id = "";
+	newword.getElementsByClassName("form-group")[0].className += " wordcheck"+num;
+	newword.getElementsByClassName("control-label")[0].className += " wordlabel"+num;
+	newword.getElementsByClassName("hidden-input")[0].className = "wordinput"+num+" form-control";
+	newword.getElementsByClassName("hidden-rule")[0].className = "ruleselect"+num+" form-control";
+	newword.style.display = "initial";
+	wordcount[num]++;
+	console.log(wordcount[num]);
+	console.log("lesson"+num+"_word"+wordcount[num]);
+        document.getElementById("NewWordSpace"+num).appendChild(newword);
+}
+
+function subWord(num){// done and functional
+	if(wordcount[num] >= 0){
+		var element = document.getElementsByClassName("newword"+num)[wordcount[num]];
+		element.parentNode.removeChild(element);
+		wordcount[num]--;
+	}else{
+		console.log("No More Words to Remove.");
+	}
+}
+//-/----------------------------------------------------------------------//
+
+function deleteLesson(cnt, num){// done and functional
+	console.log(cnt);
+	var title = document.getElementsByClassName("lesson_title"+cnt)[0].innerHTML;
+	console.log("Attempting to delete: "+ title);
+	var docid;
+	Ajax("../Lux/Assets/query.php", {access_token: url.access_token, query:{type: "lesson", name: title}},
+        function(data){      
+                for(var key in data[1]){
+                        docid = data[1][key]._id.$id;
+                }
+		console.log("ID: "+docid);
+		Ajax("../Lux/Assets/upsert.php", {access_token: url.access_token, query:{type:"lesson", name: title}},
+		function(data){
+			Ajax("../Lux/Assets/upsert.php", {access_token: url.access_token, query:{type:"card", lesson_id: docid}},
+			function(data){});
+		});		
+	});
+}
+
+//-----------------------Lesson Submission Process-------------------------------------//
+function submitLesson(num){// done and functional
+	var wds = document.getElementsByClassName("wordinput"+num);
+	var rls = document.getElementsByClassName("ruleselect"+num);
+        var len = wordcount[num]+ 1;
+        console.log("total words: "+len);
+        var inc = 0;
+	var nws = []; //newwords array meant to store the new words
+	var nrls = []; //newrules array meant to the store the new words' rules
+        queryWords(num, inc, wds, rls, nws, nrls);
+}
+
+
+function queryWords(num, ind, list, rules, newwords, newrules){// done and functional
+	var len = wordcount[num] + 1;
+	var allValid = true;
+	if(ind != len){                        
+             Ajax("../Lux/Assets/query.php", {access_token: url.access_token, query:{type:"word", word: list[ind].value}}, 
+             function(data){
+                 if(data[1].length == 0){
+                        document.getElementsByClassName("wordlabel"+num)[ind].innerHTML = "New Word & Rule - Invalid Try Again!";
+                        document.getElementsByClassName("wordcheck"+num)[ind].className = "wordcheck"+num+" form-group has-error";
+			allValid = false;
+                 }
+                 for(var key in data[1]){
+                        if(data[1][key].word == list[ind].value){
+                                  document.getElementsByClassName("wordlabel"+num)[ind].innerHTML = "New Word & Rule - is Valid!";
+                                  document.getElementsByClassName("wordcheck"+num)[ind].className = "wordcheck"+num+" form-group has-success";
+				  newwords.push(data[1][key]);
+				  console.log(rules[ind].value); //checks for the correct rule
+				  newrules.push(rules[ind].value);
+                        }
+                }
+		if(allValid){
+			queryWords(num, ind+1, list, rules, newwords, newrules);
+		}else{
+			return;
+		}
+	    });
+	}else{
+		//console.log(newwords);
+		addLesson(num, newwords, newrules, len);
+	}
+}
+
+function addLesson(num, newwords, newrules, len){// done and functional
+	var lessonname = document.getElementsByClassName("lessonname")[num].value;
+        var tiernum = document.getElementsByClassName("tiernum")[num].value;
+        var lessonsum = document.getElementsByClassName("lessonsum")[num].value;
+        var id;
+	var ind = 0;
+	if(isNaN(parseInt(tiernum))){
+                console.log("ERROR: tier input not a number");
+                return;
+        }
+        var selector = document.getElementsByClassName("imageselect"+num)[0];
+        var selection = selector.options[selector.selectedIndex].value;
+        console.log("|--------------------------|-------------------|");
+        console.log(lessonname+ " "+tiernum+" "+selection + lessonsum);
+	Ajax("../Lux/Assets/upsert.php", {access_token:url.access_token, update:{type:"lesson", name:lessonname, tier: tiernum, summary: lessonsum, status: "0", image_link: selection}}, 
+              function(data){
+           
+		console.log("Name: " + lessonname); 
+		Ajax("../Lux/Assets/query.php", {access_token:url.access_token, query:{type:"lesson", name:lessonname}},
+              		function(data){
+                		for(var key in data[1]){
+					console.log("Saved to Lux --------------------");
+					id = data[1][key]._id.$id;
+					// TODO: Add Lesson Intro Card
+					Ajax("../Lux/Assets/upsert.php", {access_token:url.access_token, 
+									  "update":{
+											cardType:"lessonIntroPage"
+											,type:"card"
+											,lesson_id:id
+											,order:0
+											,name:lessonname
+											,summary:lessonsum
+									   }
+									},
+					function(){});
+					Ajax("../Lux/Assets/upsert.php", {access_token:url.access_token, 
+									  "update":{
+											cardType:"lessonCompletePage"
+											,type:"card"
+											,lesson_id:id
+											,order:newwords.length+1
+											,name:lessonname
+											,summary:lessonsum
+									   }
+									},
+					function(){});
+					addCard(num, newwords, newrules, id, ind, len); 
+				}
+        	});
+ 
+        });
+
+
+	
+		
+}
+
+function addCard(num, newwords, newrules, id, ind, len){// done and functional
+	console.log("|------------ LOADING UP WORDS -----------------|");
+	console.log(newwords.length + " " + ind);
+	// if this is not the end
+	if(ind < newwords.length){
+		// log the index 
+		console.log("index is at: "+ind);
+
+		// build the object and submit the card:
+
+		var wordspace = document.getElementById("NewWordSpace"+num).getElementsByClassName("wordcheck"+num)[ind];
+		
+		var cardRule = wordspace.getElementsByTagName("select");
+		update = {
+			 type: "card"
+			,word:newwords[ind].word
+			,audio:newwords[ind].audio
+			,pron:newwords[ind].pron
+			,lesson_id: id
+			,order: ind+1
+			,card_rule: cardRule[1].value
+			,wordRule: cardRule[2].value
+			,conjugateRule: cardRule[3].value
+			,cardT: wordspace.getElementsByClassName("ruleselect"+num)[0].value
+		}
+		var allinputs = wordspace.getElementsByTagName("input");
+		console.log("CTX====================");
+		var CTXArray = Array.prototype.slice.call(allinputs).filter(function(el){
+			return (el.className.indexOf(wordspace.getElementsByClassName("ruleselect"+num)[0].value) > -1);
+		});	
+		var d = new Date();
+		var n = d.getTime();
+		// TODO: For Whatever Reason, the name is not updating properly?
+		// This needs to be resolved 
+		console.log(CTXArray);	
+		switch(wordspace.getElementsByClassName("ruleselect"+num)[0].value){
+			case "CT0":
+				update.cardType = "recordPage";
+				// one optional audio file
+				if(CTXArray[0].files.length > 0){
+					CTXArray[0].files[0].name = n.toString() + (Math.floor(Math.random()*100000000000)).toString() +CTXArray[0].files[0].name; 
+					console.log("_________________NEW NAME_______________");
+					console.log(CTXArray[0].files[0].name);
+					console.log(n.toString() + (Math.floor(Math.random()*100000000000)).toString() +CTXArray[0].files[0].name); 
+					update.audio = "http://demo.philadelphiagamelab.org/uploads/"+CTXArray[0].files[0].name;
+					AjaxUpload(CTXArray[0]);
+				}
+				break;	
+			case "CT1":
+				update.cardType = "matchImagePage";
+				update.images = [];
+				if(CTXArray[0].files.length > 0){
+					CTXArray[0].files[0].name =  n.toString() + (Math.floor(Math.random()*100000000000)).toString() + CTXArray[0].files[0].name;
+					update.images[0] = CTXArray[0].files[0].name;
+					AjaxUpload(CTXArray[0]);
+				}
+				if(CTXArray[1].files.length > 0){
+					CTXArray[1].files[0].name = n.toString() + (Math.floor(Math.random()*100000000000)).toString() +  CTXArray[1].files[0].name;
+					update.images[1] = CTXArray[1].files[0].name;
+					AjaxUpload(CTXArray[1]);
+				}
+				if(CTXArray[2].files.length > 0){
+					CTXArray[2].files[0].name =  n.toString() + (Math.floor(Math.random()*100000000000)).toString() + CTXArray[2].files[0].name;
+					update.images[2] = CTXArray[2].files[0].name;
+					AjaxUpload(CTXArray[2]);
+				}
+				if(CTXArray[3].files.length > 0){
+					CTXArray[3].files[0].name =  n.toString() + (Math.floor(Math.random()*100000000000)).toString() + CTXArray[3].files[0].name
+					update.images[3] = CTXArray[3].files[0].name;
+					AjaxUpload(CTXArray[3]);
+				}
+				break;	
+			case "CT2":
+				update.spelling = [];
+				update.cardType = "chooseSpellingPage";
+				update.spelling[0] = CTXArray[0].value;
+				update.spelling[1] = CTXArray[1].value;
+				update.spelling[2] = CTXArray[2].value;
+				if(CTXArray[3].files.length > 0){
+					CTXArray[3].files[0].name = n.toString() + (Math.floor(Math.random()*100000000000)).toString() + CTXArray[3].files[0].name;
+					update.image = CTXArray[3].files[0].name;
+					AjaxUpload(CTXArray[3]);
+				}
+				break;	
+			case "CT3":
+				// do nothing
+				update.cardType = "spellWordPage";
+				break;	
+			case "CT4":
+				// generic page, no test here.
+			default:
+				return;	
+				break;	
+		}
+		console.log("Update: " );
+		console.log(update);
+		Ajax("../Lux/Assets/upsert.php", {access_token:url.access_token, 
+						  "update":update
+						},
+			function(){ // do nothing
+			});
+
+		// This is where we should submit the files to lux...		
+
+		// call recursively with next word to be added
+		addCard(num, newwords, newrules, id, ind+1, len);
+	} else {
+	// if this is the last word to be submitted
+		//When all the words have been added successfully
+		postSubmit(num, id);
+	}
+}
+
+function postSubmit(num, id){
+	console.log("__________________RUNNING POST SUBMIT______________");
+
+	// TODO: reset all the values here:
+
+	document.getElementById("new-name"+num).value = "";
+	document.getElementById("new-tier"+num).value = "";
+	document.getElementsByClassName("imageselect"+num)[0].value = "./images/ACORN.png";
+	document.getElementById("lesson-sum"+num).value = "";
+	document.getElementById("NewWordSpace"+num).getElementsByClassName("ruleselect"+num)[0].value = "CT3";
+	document.getElementById("NewWordSpace"+num).getElementsByClassName("ruleselect"+num)[1].value = "r0";
+	document.getElementById("NewWordSpace"+num).getElementsByClassName("ruleselect"+num)[2].value = "r0";
+	document.getElementById("NewWordSpace"+num).getElementsByClassName("ruleselect"+num)[3].value = "r0";
+	document.getElementById("NewWordSpace"+num).getElementsByClassName("wordinput"+num)[0].value = "";
+	cardType(document.getElementById("NewWordSpace"+num).getElementsByClassName("ruleselect"+num)[0]);
+	// Add lesson Below
+
+}
+
+//-----------------------------------------------------------------------------------//
+
+
+//----------------------------Checking Words Process---------------------------------//
+function checkWords(lesnum){// done and functional
+	var wds = document.getElementsByClassName("wordinput"+lesnum);
+	var len = wordcount[lesnum]+ 1;
+	console.log("total words: "+len);
+	var inc = 0;
+	respondWithCheck(wds, inc, lesnum);
+}
+
+function respondWithCheck(list, ind, num){// done and functional
+	var len = wordcount[num] + 1;
+
+	if(ind != len){                        
+             Ajax("../Lux/Assets/query.php", {access_token: url.access_token, query:{type:"word", word: list[ind].value}}, 
+	     function(data){
+		 if(data[1].length == 0){
+                        document.getElementsByClassName("wordlabel"+num)[ind].innerHTML = "New Word & Rule - Invalid Try Again!";
+                 	document.getElementsByClassName("wordcheck"+num)[ind].className = "wordcheck"+num+" form-group has-error";
+                 }
+                 for(var key in data[1]){
+                        console.log(list[ind].value);
+                        console.log(data[1][key].word);
+                        if(data[1][key].word == list[ind].value){
+                                  console.log(ind);
+                                  document.getElementsByClassName("wordlabel"+num)[ind].innerHTML = "New Word & Rule - is Valid!";
+                                  document.getElementsByClassName("wordcheck"+num)[ind].className = "wordcheck"+num+" form-group has-success";
+                        }
+		}
+		respondWithCheck(list, ind+1, num);
+	     });
+	} else {
+		//Happens if you've reached the end
+	}
+}
+//---------------------------------------------------------------------------------//
+
+
+//-------------------------------Editing Lesson Process----------------------------//
+function loadLesson(cnt, num){
+	console.log("__________________RUNNING LOAD LESSON______________");
+	var title = document.getElementsByClassName("lesson_title"+cnt)[0].innerHTML;
+	console.log(title);
+	Ajax("../Lux/Assets/query.php", {access_token: url.access_token, query:{type:"lesson", name:title}},
+	function(data){
+		for(var key in data[1]){
+			document.getElementById("new-name"+num).value = data[1][key].name;
+			document.getElementById("new-tier"+num).value = data[1][key].tier;
+			document.getElementsByClassName("imageselect"+num)[0].value = data[1][key].image_link;
+			//document.getElementById("lesson-sum"+num).value = data[1][key].summary;
+			var id = data[1][key]._id.$id;
+			console.log("!!!!! "+JSON.stringify(id));
+			Ajax("../Lux/Assets/query.php", {access_token: url.access_token, query:{type: "card", lesson_id: id}}, 
+				function(data){
+					console.log(data[1]);
+					var ind = 0;
+					for(var key in data[1]){
+						if(data[1][key].cardType != "lessonIntroPage" && data[1][key].cardType != "lessonCompletePage"){
+							if(document.getElementsByClassName("wordinput"+num)[ind] === undefined){
+								addWord(num);
+							}
+							// Load Lesson Type
+							// TODO: Populate the Lesson Field here:
+							console.log(num+ " : " + ind + " <- num and ind");
+							document.getElementById("NewWordSpace"+num).getElementsByClassName("ruleselect"+num)[ind+0].value = data[1][key].cardT;
+							document.getElementById("NewWordSpace"+num).getElementsByClassName("ruleselect"+num)[ind+1].value = data[1][key].card_rule;
+							document.getElementById("NewWordSpace"+num).getElementsByClassName("ruleselect"+num)[ind+2].value = data[1][key].wordRule;
+							document.getElementById("NewWordSpace"+num).getElementsByClassName("ruleselect"+num)[ind+3].value = data[1][key].conjugateRule;
+							document.getElementById("NewWordSpace"+num).getElementsByClassName("wordinput"+num)[ind+0].value = "";
+							cardType(document.getElementById("NewWordSpace"+num).getElementsByClassName("ruleselect"+num)[ind+0]);
+							// Add lesson Below
+
+						
+							ind++;
+						}
+					}
+					console.log(data[1]);	
+				});
+		}
+
+	});
+}
+
+function hideElements(array, hidden){// done and functional
+	for(var i = 0; i < array.length; i++){
+		array[i].style.display = hidden;
+		array[i].value = "";
+	}
+}
+
+function cardType(element){// done and functional
+	console.log("Card Type Changed to " + element.value);
+	hideElements(element.parentNode.getElementsByClassName("CT0"), "none");
+	hideElements(element.parentNode.getElementsByClassName("CT1"), "none");
+	hideElements(element.parentNode.getElementsByClassName("CT2"), "none");
+	hideElements(element.parentNode.getElementsByClassName("CT3"), "none");
+	hideElements(element.parentNode.getElementsByClassName(element.value), "block");
+}
+
+function updateLesson(cnt, num){
+	var title = document.getElementsByClassName("lesson_title"+cnt)[0].innerHTML;
+	var nm = document.getElementById("new-name"+num).value;
+	var tr = document.getElementById("new-tier"+num).value;
+	var img = document.getElementsByClassName("imageselect"+num)[0].value;
+	var docid;
+	Ajax("../Lux/Assets/query.php", {access_token: url.access_token, query:{type: "lesson", name: title}},
+	function(data){
+		
+		for(var key in data[1]){
+			docid = data[1][key]._id.$id;
+		}
+		Ajax("../Lux/Assets/upsert.php", {access_token: url.access_token, query:{_id: docid, type: "lesson", name: title}, update:{type: "lesson", name: nm, tier: tr, image_link: img}},
+		function(data){
+			console.log("lesson has been updated... querying for words");
+			console.log(data[1]);
+			var wds = document.getElementsByClassName("wordinput"+num);
+        		var rls = document.getElementsByClassName("ruleselect"+num);
+        		var inc = 0;
+        		var nws = []; //newwords array meant to store the new words
+        		var nrls = []; //newrules array meant to the store the new words' rules
+			var len = 5;
+			queryWordsEdit(docid, num, wds, inc, rls, nws, nrls);
+			
+		});
+	
+	});
+}
+
+function queryWordsEdit(docid, num, list, ind, rules, newwords, newrules){
+        var len = wordcount[num] + 1;
+        var allValid = true;i
+        if(ind != len){                        
+             Ajax("../Lux/Assets/query.php", {access_token: url.access_token, query:{type:"word", word: list[ind].value}}, 
+             function(data){
+                 if(data[1].length == 0){
+                        document.getElementsByClassName("wordlabel"+num)[ind].innerHTML = "New Word & Rule - Invalid Try Again!";
+                        document.getElementsByClassName("wordcheck"+num)[ind].className = "wordcheck"+num+" form-group has-error";
+                        allValid = false;
+                 }
+                 for(var key in data[1]){
+                        if(data[1][key].word == list[ind].value){
+                                  document.getElementsByClassName("wordlabel"+num)[ind].innerHTML = "New Word & Rule - is Valid!";
+                                  document.getElementsByClassName("wordcheck"+num)[ind].className = "wordcheck"+num+" form-group has-success";
+                                  newwords.push(data[1][key]);
+                                  console.log(rules[ind].value); //checks for the correct rule
+                                  newrules.push(rules[ind].value);
+                        }
+                }
+                if(allValid){
+                        queryWordsEdit(docid, num, list, ind+1, rules, newwords, newrules);
+                }else{
+                        console.log("There is an Error with the entry: Aborting Mission.");
+			return;
+                }
+            });
+        }else{
+                //console.log(newwords);
+		var i = 0;
+                deleteCards(docid, num, i,  newwords, newrules, len);
+        }
+}
+
+function deleteCards(docid, num, ind, newwords, newrules, len){
+	var len = wordcount[num] + 1;
+	Ajax("../Lux/Assets/upsert.php", {access_token: url.access_token, query:{type: "card", lesson_id: docid}},
+	function(data){
+		var i = 0;
+		updateCards(docid, num, newwords, newrules, i, len);
+	});
+}
+
+function updateCards(docid, num, newwords, newrules, ind, len){
+        console.log(newwords[ind]+" "+newrules[ind]);
+        if(ind != len){
+                Ajax("../Lux/Assets/upsert.php", {access_token:url.access_token, update:{type:"card", word: newwords[ind].word, audio: newwords[ind].audio, pron: newwords[ind].pron, lesson_id: docid, order: ind, card_rule: newrules[ind]}},
+                        function(){
+                });
+        
+                updateCards(docid, num, newwords, newrules, ind+1, len);
+        } else {
+                //When all the words have been added successfully
+                postSubmit(num);
+        }
+}
+
+//-----------------------------------------------------------------------------//
+
+window.onload=function(){// done and functional
+	document.getElementById("dashb").href += "?access_token="+url.access_token;
+	document.getElementById("lbuilder").href += "?access_token="+url.access_token;
+}
+
+</script>
+
+</head>
+<body>
+
+    <div id="wrapper">
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.html">Phonics</a>
+            </div>
+            <!-- Top Menu Items -->
+            <ul class="nav navbar-right top-nav">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> Teacher Name <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a href="#"><i class="fa fa-fw fa-user"></i> Profile</a>
+                        </li>
+                        <li class="divider"></li>
+                        <li>
+                            <a href="index.html"><i class="fa fa-fw fa-power-off"></i> Log Out</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <!-- Sidebar Menu Items - These collapse to the responsive navigation menu on small screens -->
+            <div class="collapse navbar-collapse navbar-ex1-collapse">
+                <ul class="nav navbar-nav side-nav">
+                    <li>
+                        <a id="dashb" href="dashboard.html"><i class="fa fa-fw fa-dashboard"></i> Dashboard</a>
+                    </li>
+                    <li class="active">
+                        <a id="lbuilder" href="builder.html"><i class="fa fa-fw fa-table"></i> Lesson Builder</a>
+                    </li>
+                    <li>
+                        <a href="javascript:;" data-toggle="collapse" data-target="#class"><i class="fa fa-fw fa-arrows-v"></i> Students<i class="fa fa-fw fa-caret-down"></i></a>
+                        <ul id="class" class="collapse">
+                            <li>
+                                <a href="class.html">Class</a>
+                            </li>
+                            <li>
+                                <a href="class.html?student=">Student Name</a>
+                            </li>
+
+                            <li>
+                                <a href="class.html?student=">Student Name</a>
+			    </li>
+                            <li>
+                                <a href="class.html?student=">Student Name</a>
+                            </li>
+                            <li>
+                                <a href="class.html?student=">Student Name</a>
+                            </li>
+                            <li>
+                                <a href="class.html?student=">Student Name</a>
+                            </li>
+                            <li>
+                                <a href="class.html?student=">Student Name</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                    <a href="classManagement.html"><i class="fa fa-fw fa-edit"></i> Class Manager</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </nav>
+	
+	 <div id="page-wrapper">
+
+            <div class="container-fluid">
+
+                <!-- Page Heading -->
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h1 class="page-header">
+                            Lesson Builder
+                        </h1>
+                    </div>
+                </div>
+
+		 <!-- /.row -->
+
+                <div class="row">
+                    <div class="col-lg-12">
+			
+			<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="heading1">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapse1" aria-expanded="true" aria-controls="collapse1">
+          New Lesson
+        </a>
+      </h4>
+    </div>
+    <div id="collapse1" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="heading1">
+      <div class="panel-body">
+            <form role="form">
+               <div class="col-lg-6">
+	       <div class="form-group">
+                  <label>Lesson Name</label>
+                  <input id="new-name0" class="lessonname form-control" />
+                  <p class="help-block">Example: Vowels</p>
+               </div>
+               <div class="form-group">
+                  <label>Image Selector</label>
+                  <select class="imageselect0 form-control">
+                    <option value="./images/ACORN.png">Acorn</option>
+                    <option value="./images/BOOK_PENCIL.png">Book & Pencil</option>
+                    <option value="./images/CAP.png">Cap</option>
+                    <option value="./images/HOMEWORK.png">Homework</option>
+                    <option value="./images/IDEA_BRAIN.png">Idea</option>
+		    <option value="./images/RUNNIN.png">Running</option>
+		    <option value="./images/SCHOOL.png">School</option>
+		    <option value="./images/SPACE_SHIP.png">Space Ship</option>
+		    <option value="./images/SPROUT.png">Plant</option>
+		    <option value="./images/SYLLABLES.png">Syllables</option>
+		    <option value="./images/TALKY_FACE.png">Speech</option>
+                  </select>
+               </div>
+               <div class="form-group">
+                  <label>Lesson Tier</label>
+                  <input id="new-tier0" class="tiernum form-control" min="0" step="1" data-bind="value:replyNumber" />
+                  <p class="help-block">*Must be an integer
+              </div>
+               <div class="form-group">
+                  <label>Lesson Summary</label>
+                  <textarea rows=5 id="lesson-sum0" class="lessonsum form-control"></textarea>
+                  <p class="help-block">
+              </div>
+              <div class="pull-right">
+		<a class="btn btn-default" onclick="submitLesson(0)">Submit Lesson</a>
+	      </div>
+	      </div>
+	      <br/>
+	      <!-- End of 1st Column -->
+	      <div class="col-lg-6">
+              <div id="NewWordSpace0">
+                   <!-- Hidden Word -->
+                   <div id="hidden-newword0"  style="display: none;">
+                   <div class="form-group">
+		   <hr/>
+                   <label class="control-label">New Card</label>
+                   <label class="control-label" >Card Type</label>
+			   <select onchange="cardType(this)" class="hidden-rule form-control">
+			    <option value="CT3">Spell Word Card</option>
+			    <option value="CT0">Record Car/d</option>
+			    <option value="CT1">Image Match Card</option>
+			    <option value="CT2">Choose Spelling Card</option>
+			   </select>
+			   <p class="help-block"> </p>
+                   <label class="control-label">Card Rule</label>
+			   <select class="hidden-rule form-control">
+			    <option value="r0">Rule 0</option>
+			    <option value="r1">Rule 1</option>
+			    <option value="r2">Rule 2</option>
+			    <option value="r3">Rule 3</option>
+			    <option value="r4">Rule 4</option>
+			    <option value="r5">Rule 5</option>
+			    <option value="r6">Rule 6</option>
+			    <option value="r7">Rule 7</option>
+			    <option value="r8">Rule 8</option>
+			    <option value="r9">Rule 9</option>
+			    <option value="r10">Rule 10</option>
+			   </select>
+			   <p class="help-block"> </p>
+                   <label class="control-label">Word on Card</label>
+                   <input class="hidden-input form-control">
+                   <label class="control-label">Word Rule Being Taught</label>
+			   <select class="hidden-rule form-control">
+			    <option value="r0">Rule 0</option>
+			    <option value="r1">Rule 1</option>
+			    <option value="r2">Rule 2</option>
+			    <option value="r3">Rule 3</option>
+			    <option value="r4">Rule 4</option>
+			    <option value="r5">Rule 5</option>
+			    <option value="r6">Rule 6</option>
+			    <option value="r7">Rule 7</option>
+			    <option value="r8">Rule 8</option>
+			    <option value="r9">Rule 9</option>
+			    <option value="r10">Rule 10</option>
+			   </select>
+			   <p class="help-block"> </p>
+                   <label class="control-label">Conjugate Rule Being Taught</label>
+			   <select class="hidden-rule form-control">
+			    <option value="r0">Rule 0</option>
+			    <option value="r1">Rule 1</option>
+			    <option value="r2">Rule 2</option>
+			    <option value="r3">Rule 3</option>
+			    <option value="r4">Rule 4</option>
+			    <option value="r5">Rule 5</option>
+			    <option value="r6">Rule 6</option>
+			    <option value="r7">Rule 7</option>
+			    <option value="r8">Rule 8</option>
+			    <option value="r9">Rule 9</option>
+			    <option value="r10">Rule 10</option>
+			   </select>
+			   <p class="help-block"> </p>
+                   <label class="control-label CT2" style="display:none"   >Incorrect Spelling</label>
+                   <input class="hidden-input form-control CT2" style="display:none"  >
+                   <label class="control-label CT2" style="display:none" >Incorrect Spelling (optional)</label>
+                   <input class="hidden-input form-control CT2" style="display:none"  >
+                   <label class="control-label CT2" style="display:none" >Incorrect Spelling (optional)</label>
+                   <input class="hidden-input form-control CT2" style="display:none"  >
+                   <label class="control-label CT2" style="display:none"  >Card Image</label>
+                   <input type="file" name="fileToUpload" class="hidden-input form-control CT2" style="display:none"  >
+                   <label class="control-label CT1" style="display:none"  >Card Image (correct)</label>
+                   <input type="file" name="fileToUpload" class="hidden-input form-control CT1" style="display:none"  >
+                   <label class="control-label CT1" style="display:none"  >Card Image (incorrect)</label>
+                   <input type="file" name="fileToUpload" class="hidden-input form-control CT1" style="display:none"  >
+                   <label class="control-label CT1" style="display:none"  >Card Image (incorrect & optional)</label>
+                   <input type="file" name="fileToUpload" class="hidden-input form-control CT1" style="display:none"  >
+                   <label class="control-label CT1" style="display:none"  >Card Image (incorrect & optional)</label>
+                   <input type="file" name="fileToUpload" class="hidden-input form-control CT1" style="display:none"  >
+                   <label class="control-label CT0" style="display:none"  >Word Audio (optional)</label>
+		   <input type="file" name="fileToUpload" accept="audio/*;capture=microphone" class="hidden-input form-control CT0" style="display:none"  >
+                   </div>
+                   </div>
+	           <!-- End of Hidden Word -->
+		   <div class="newword0">
+		   <div class="wordcheck0 form-group">
+		   <label class="wordlabel0 control-label">New Card</label>
+                   <label class="wordlabel0 control-label">Card Type</label>
+			   <select onchange="cardType(this)" class="ruleselect0 form-control">
+			    <option value="CT3">Spell Word Card</option>
+			    <option value="CT0">Record Card</option>
+			    <option value="CT1">Image Match Card</option>
+			    <option value="CT2">Choose Spelling Card</option>
+			   </select>
+			   <p class="help-block"> </p>
+		   <label class="wordlabel0 control-label">Card Rule</label>
+			   <select class="ruleselect0 form-control">
+			    <option value="r0">Rule 0</option>
+			    <option value="r1">Rule 1</option>
+			    <option value="r2">Rule 2</option>
+			    <option value="r3">Rule 3</option>
+			    <option value="r4">Rule 4</option>
+			    <option value="r5">Rule 5</option>
+			    <option value="r6">Rule 6</option>
+			    <option value="r7">Rule 7</option>
+			    <option value="r8">Rule 8</option>
+			    <option value="r9">Rule 9</option>
+			    <option value="r10">Rule 10</option>
+			   </select>
+			   <p class="help-block"> </p>
+		   <label class="wordlabel0 control-label">Word on Card</label>
+		   <input class="wordinput0 form-control">
+		   <label class="control-label">Word Rule Being Taught</label>
+			   <select class="ruleselect0 form-control">
+			    <option value="r0">Rule 0</option>
+			    <option value="r1">Rule 1</option>
+			    <option value="r2">Rule 2</option>
+			    <option value="r3">Rule 3</option>
+			    <option value="r4">Rule 4</option>
+			    <option value="r5">Rule 5</option>
+			    <option value="r6">Rule 6</option>
+			    <option value="r7">Rule 7</option>
+			    <option value="r8">Rule 8</option>
+			    <option value="r9">Rule 9</option>
+			    <option value="r10">Rule 10</option>
+			   </select>
+			   <p class="help-block"> </p>
+		   <label class="control-label">Conjugate Rule Being Taught</label>
+			   <select class="ruleselect0 form-control">
+			    <option value="r0">Rule 0</option>
+			    <option value="r1">Rule 1</option>
+			    <option value="r2">Rule 2</option>
+			    <option value="r3">Rule 3</option>
+			    <option value="r4">Rule 4</option>
+			    <option value="r5">Rule 5</option>
+			    <option value="r6">Rule 6</option>
+			    <option value="r7">Rule 7</option>
+			    <option value="r8">Rule 8</option>
+			    <option value="r9">Rule 9</option>
+			    <option value="r10">Rule 10</option>
+			   </select>
+			   <p class="help-block"> </p>
+                   <label class="control-label CT2" style="display:none"  >Incorrect Spelling</label>
+		   <input class="form-control CT2" style="display:none"  >
+                   <label class="control-label CT2" style="display:none"  >Incorrect Spelling (optional)</label>
+		   <input class="form-control CT2" style="display:none"  >
+                   <label class="control-label CT2" style="display:none"  >Incorrect Spelling (optional)</label>
+		   <input class="form-control CT2" style="display:none">
+		   <label class="control-label CT2" style="display:none"  >Card Image</label>
+		   <input type="file" name="fileToUpload" class="form-control CT2" style="display:none"  >
+		   <label class="control-label CT1" style="display:none"  >Card Image (correct)</label>
+		   <input type="file" name="fileToUpload" class="form-control CT1" style="display:none"  >
+		   <label class="wordlabel0 control-label CT1" style="display:none"  >Card Image (incorrect)</label>
+		   <input type="file" name="fileToUpload" class="form-control CT1" style="display:none"  >
+		   <label class="wordlabel0 control-label CT1" style="display:none"  >Card Image (incorrect & optional)</label>
+		   <input type="file" name="fileToUpload" class="form-control CT1" style="display:none"  >
+		   <label class="wordlabel0 control-label CT1" style="display:none"  >Card Image (incorrect & optional)</label>
+		   <input type="file" name="fileToUpload" class="form-control CT1" style="display:none"  >
+		   <label class="wordlabel0 control-label CT0" style="display:none" >Word Audio (optional)</label>
+		   <input type="file" name="fileToUpload" accept="audio/*;capture=microphone" class="hidden-input form-control CT0" style="display:none"  >
+		   </div>
+	           </div>
+	      </div>
+	      <a class="btn" onclick="addWord(0)">
+                <span class="glyphicon glyphicon-plus">
+              </a>
+	      <a class="btn" onclick="subWord(0)">
+	      	<span class="glyphicon glyphicon-minus">
+	      </a>
+	      <div class="pull-right">
+	      <a class="btn btn-default" onclick="checkWords(0)">Check Words</a>
+	      </div>
+	      </div> 
+	      <!-- End of 2nd Column -->
+           </form>
+      </div>
+      </div>
+    </div>
+  
+  <!--Start of Hidden Panel -->
+  <div class="newpanel" style="display: none">
+  <div class="panel panel-default">
+    <div class="hidden-head panel-heading" role="tab" id="heading">
+      <h4 class="panel-title hidden-title">
+        <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse" aria-expanded="false" aria-controls="collapse">
+          Title
+        </a>
+      </h4>
+    </div>
+    <div id="collapse" class="hidden-body panel-collapse collapse" role="tabpanel" aria-labelledby="heading">
+      <div class="panel-body">
+		<form role="form">
+               <div class="col-lg-6">
+               <div class="form-group">
+                  <label>Lesson Name</label>
+                  <input id="new-name" class="hidden-name form-control" />
+                  <p class="help-block">Example: Vowels</p>
+               </div>
+               <div class="form-group">
+                  <label>Image Selector</label>
+                  <select class="hidden-selector form-control">
+                    <option value="./images/ACORN.png">Acorn</option>
+                    <option value="./images/BOOK_PENCIL.png">Book & Pencil</option>
+                    <option value="./images/CAP.png">Cap</option>
+                    <option value="./images/HOMEWORK.png">Homework</option>
+                    <option value="./images/IDEA_BRAIN.png">Idea</option>
+                    <option value="./images/RUNNIN.png">Running</option>
+                    <option value="./images/SCHOOL.png">School</option>
+                    <option value="./images/SPACE_SHIP.png">Space Ship</option>
+                    <option value="./images/SPROUT.png">Plant</option>
+                    <option value="./images/SYLLABLES.png">Syllables</option>
+                    <option value="./images/TALKY_FACE.png">Speech</option>
+		  </select>
+               </div>
+               <div class="form-group">
+                  <label>Lesson Tier</label>
+                  <input id="new-tier" class="hidden-tier form-control" min="0" step="1" data-bind="value:replyNumber" />
+                  <p class="help-block">*Must be an integer
+              </div>
+               <div class="form-group">
+                  <label>Lesson Summary</label>
+                  <textarea rows=5 id="lesson-sum" class="hidden-tier lessonsum form-control"></textarea>
+                  <p class="help-block">
+              </div>
+	      	<div class="sub-less">
+              	</div>
+	      </div>
+	      <br/>
+              <!-- End of 1st Column -->
+              <div class="col-lg-6">
+              <div class="hid-nws" id="NewWordSpace">
+		   <!-- Hidden Word -->
+                   <div class="hid-nw" id="hidden-newword"  style="display: none;">
+                   <div class="form-group">
+
+		   <label class="control-label">New Card</label>
+                   <label class="control-label" >Card Type</label>
+			   <select onchange="cardType(this)" class="hidden-rule form-control">
+			    <option value="CT3">Spell Word Card</option>
+			    <option value="CT0">Record Car/d</option>
+			    <option value="CT1">Image Match Card</option>
+			    <option value="CT2">Choose Spelling Card</option>
+			   </select>
+			   <p class="help-block"> </p>
+                   <label class="control-label">Card Rule</label>
+			   <select class="hidden-rule form-control">
+			    <option value="r0">Rule 0</option>
+			    <option value="r1">Rule 1</option>
+			    <option value="r2">Rule 2</option>
+			    <option value="r3">Rule 3</option>
+			    <option value="r4">Rule 4</option>
+			    <option value="r5">Rule 5</option>
+			    <option value="r6">Rule 6</option>
+			    <option value="r7">Rule 7</option>
+			    <option value="r8">Rule 8</option>
+			    <option value="r9">Rule 9</option>
+			    <option value="r10">Rule 10</option>
+			   </select>
+			   <p class="help-block"> </p>
+                   <label class="control-label">Word on Card</label>
+                   <input class="hidden-input form-control">
+                   <label class="control-label">Word Rule Being Taught</label>
+			   <select class="hidden-rule form-control">
+			    <option value="r0">Rule 0</option>
+			    <option value="r1">Rule 1</option>
+			    <option value="r2">Rule 2</option>
+			    <option value="r3">Rule 3</option>
+			    <option value="r4">Rule 4</option>
+			    <option value="r5">Rule 5</option>
+			    <option value="r6">Rule 6</option>
+			    <option value="r7">Rule 7</option>
+			    <option value="r8">Rule 8</option>
+			    <option value="r9">Rule 9</option>
+			    <option value="r10">Rule 10</option>
+			   </select>
+			   <p class="help-block"> </p>
+                   <label class="control-label">Conjugate Rule Being Taught</label>
+			   <select class="hidden-rule form-control">
+			    <option value="r0">Rule 0</option>
+			    <option value="r1">Rule 1</option>
+			    <option value="r2">Rule 2</option>
+			    <option value="r3">Rule 3</option>
+			    <option value="r4">Rule 4</option>
+			    <option value="r5">Rule 5</option>
+			    <option value="r6">Rule 6</option>
+			    <option value="r7">Rule 7</option>
+			    <option value="r8">Rule 8</option>
+			    <option value="r9">Rule 9</option>
+			    <option value="r10">Rule 10</option>
+			   </select>
+			   <p class="help-block"> </p>
+                   <label class="control-label CT2" style="display:none"   >Incorrect Spelling</label>
+                   <input class="hidden-input form-control CT2" style="display:none"  >
+                   <label class="control-label CT2" style="display:none" >Incorrect Spelling (optional)</label>
+                   <input class="hidden-input form-control CT2" style="display:none"  >
+                   <label class="control-label CT2" style="display:none" >Incorrect Spelling (optional)</label>
+                   <input class="hidden-input form-control CT2" style="display:none"  >
+                   <label class="control-label CT2" style="display:none"  >Card Image</label>
+                   <input type="file" name="fileToUpload" class="hidden-input form-control CT2" style="display:none"  >
+                   <label class="control-label CT1" style="display:none"  >Card Image (correct)</label>
+                   <input type="file" name="fileToUpload" class="hidden-input form-control CT1" style="display:none"  >
+                   <label class="control-label CT1" style="display:none"  >Card Image (incorrect)</label>
+                   <input type="file" name="fileToUpload" class="hidden-input form-control CT1" style="display:none"  >
+                   <label class="control-label CT1" style="display:none"  >Card Image (incorrect & optional)</label>
+                   <input type="file" name="fileToUpload" class="hidden-input form-control CT1" style="display:none"  >
+                   <label class="control-label CT1" style="display:none"  >Card Image (incorrect & optional)</label>
+                   <input type="file" name="fileToUpload" class="hidden-input form-control CT1" style="display:none"  >
+                   <label class="control-label CT0" style="display:none"  >Word Audio (optional)</label>
+		   <input type="file" name="fileToUpload" accept="audio/*;capture=microphone" class="hidden-input form-control CT0" style="display:none"  >
+                   </div>
+                   </div>
+	           <!-- End of Hidden Word -->
+		   <div class="newword">
+		   <div class="wordcheck form-group">
+		   <label class="wordlabel control-label">New Card</label>
+                   <label class="wordlabel control-label">Card Type</label>
+			   <select onchange="cardType(this)" class="ruleselect0 form-control">
+			    <option value="CT3">Spell Word Card</option>
+			    <option value="CT0">Record Card</option>
+			    <option value="CT1">Image Match Card</option>
+			    <option value="CT2">Choose Spelling Card</option>
+			   </select>
+			   <p class="help-block"> </p>
+		   <label class="wordlabel control-label">Card Rule</label>
+			   <select class="ruleselect form-control">
+			    <option value="r0">Rule 0</option>
+			    <option value="r1">Rule 1</option>
+			    <option value="r2">Rule 2</option>
+			    <option value="r3">Rule 3</option>
+			    <option value="r4">Rule 4</option>
+			    <option value="r5">Rule 5</option>
+			    <option value="r6">Rule 6</option>
+			    <option value="r7">Rule 7</option>
+			    <option value="r8">Rule 8</option>
+			    <option value="r9">Rule 9</option>
+			    <option value="r10">Rule 10</option>
+			   </select>
+			   <p class="help-block"> </p>
+		   <label class="wordlabel control-label">Word on Card</label>
+		   <input class="wordinput form-control">
+		   <label class="wordlabel control-label">Word Rule Being Taught</label>
+			   <select class="ruleselect form-control">
+			    <option value="r0">Rule 0</option>
+			    <option value="r1">Rule 1</option>
+			    <option value="r2">Rule 2</option>
+			    <option value="r3">Rule 3</option>
+			    <option value="r4">Rule 4</option>
+			    <option value="r5">Rule 5</option>
+			    <option value="r6">Rule 6</option>
+			    <option value="r7">Rule 7</option>
+			    <option value="r8">Rule 8</option>
+			    <option value="r9">Rule 9</option>
+			    <option value="r10">Rule 10</option>
+			   </select>
+			   <p class="help-block"> </p>
+		   <label class="wordlabel control-label">Conjugate Rule Being Taught</label>
+			   <select class="ruleselect form-control">
+			    <option value="r0">Rule 0</option>
+			    <option value="r1">Rule 1</option>
+			    <option value="r2">Rule 2</option>
+			    <option value="r3">Rule 3</option>
+			    <option value="r4">Rule 4</option>
+			    <option value="r5">Rule 5</option>
+			    <option value="r6">Rule 6</option>
+			    <option value="r7">Rule 7</option>
+			    <option value="r8">Rule 8</option>
+			    <option value="r9">Rule 9</option>
+			    <option value="r10">Rule 10</option>
+			   </select>
+			   <p class="help-block"> </p>
+                   <label class="wordlabel control-label CT2" style="display:none"  >Incorrect Spelling</label>
+		   <input class="form-control CT2" style="display:none"  >
+                   <label class="wordlabel control-label CT2" style="display:none"  >Incorrect Spelling (optional)</label>
+		   <input class="form-control CT2" style="display:none"  >
+                   <label class="wordlabel control-label CT2" style="display:none"  >Incorrect Spelling (optional)</label>
+		   <input class="form-control CT2" style="display:none">
+		   <label class="wordlabel control-label CT2" style="display:none"  >Card Image</label>
+		   <input type="file" name="fileToUpload" class="form-control CT2" style="display:none"  >
+		   <label class="wordlabel control-label CT1" style="display:none"  >Card Image (correct)</label>
+		   <input type="file" name="fileToUpload" class="form-control CT1" style="display:none"  >
+		   <label class="wordlabel control-label CT1" style="display:none"  >Card Image (incorrect)</label>
+		   <input type="file" name="fileToUpload" class="form-control CT1" style="display:none"  >
+		   <label class="wordlabel control-label CT1" style="display:none"  >Card Image (incorrect & optional)</label>
+		   <input type="file" name="fileToUpload" class="form-control CT1" style="display:none"  >
+		   <label class="wordlabel control-label CT1" style="display:none"  >Card Image (incorrect & optional)</label>
+		   <input type="file" name="fileToUpload" class="form-control CT1" style="display:none"  >
+		   <label class="wordlabel control-label CT0" style="display:none" >Word Audio (optional)</label>
+		   <input type="file" name="fileToUpload" accept="audio/*;capture=microphone" class="hidden-input form-control CT0" style="display:none"  >
+                   </div>
+                   </div>
+              </div>
+	      <div class="add">
+	      </div>
+	      <div class="sub">
+	      </div>
+              <div class="pull-right">
+              </div>
+              </div>
+	      <!-- End of 2nd Column -->
+           </form>
+
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- End of Hidden Panel -->
+  <div id="PanelSpace">
+  
+  </div>
+</div>
+
+                    </div>
+                    <!-- col close -->
+
+		</div>
+                <!-- /.row -->
+		
+		</div>
+            <!-- /.container-fluid -->
+
+        </div>
+        <!-- /#page-wrapper -->
+
+    </div>
+    <!-- /#wrapper -->
+
+    <!-- jQuery -->
+    <script src="js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+
+
+</body>
+
+</html>
+                                           

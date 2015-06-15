@@ -1,0 +1,217 @@
+<html>
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Phonics Lesson Builder</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="css/sb-admin.css" rel="stylesheet">
+    <link rel="stylesheet" href="js/assets/css/simplemodal.css" type="text/css" media="screen" title="no title" charset="utf-8">
+
+    <!-- Morris Charts CSS -->
+    <link href="css/plugins/morris.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="fonts/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+<body>
+
+    <div id="wrapper">
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="navbar-header">
+                <button  type="button" onclick="append(this)" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.html">Phonics</a>
+            </div>
+            <!-- Sidebar Menu Items - These collapse to the responsive navigation menu on small screens -->
+            <div class="collapse navbar-collapse navbar-ex1-collapse">
+                <ul class="nav navbar-nav side-nav">
+                    <li class="active">
+                        <a id="lbuilder" href="builder.html"> Lesson Builder</a>
+                    </li>
+                    <li class="active">
+                        <a id="wbuilder" href="word.html"> Word Builder</a>
+                    </li>
+                    <li class="active">
+                        <a id="sbuilder" href="students.html"> Students</a>
+                    </li>
+		</ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </nav>
+	
+	 <div id="page-wrapper">
+
+            <div class="container-fluid">
+
+                <!-- Page Heading -->
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h1 class="page-header">
+                            Word Builder
+                        </h1>
+                    </div>
+                </div>
+
+
+
+
+<!-- EVERYTHING BELOW IS THE ACTUAL PAGE --> 
+
+
+
+
+
+
+		 <!-- /.row -->
+
+<div class="row">
+<div class="col-lg-12">
+
+
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+<!--- DEFAULT PANEL -->
+<div class="panel panel-default lessonpanel">
+
+	<div class="panel-heading" role="tab">
+		<h4 class="panel-title">
+			<a class="lesson-name">
+			New Word
+			</a>
+		</h4>
+	</div><!--panel-heading-->
+
+	<div class="panel-collapse">
+		<div class="panel-body">
+
+
+			<form role="form">
+			<!--- FIRST COLUMN OF LESSON EDITOR -->
+
+				<div class="col-lg-6">
+					<div class="form-group">
+						<label>Word</label>
+						<input onkeyup="fillWord()" class="word form-control Required" />
+						<p class="help-block">If the word is already stored, this will overwrite that entry </p>
+					</div>
+					<div class="form-group">
+						<label>Syllables</label>
+						<input  style="display:inline; width:90%" class="syllable form-control Required" />
+						<button style="display:inline" type="button" onclick="appendDot(this)" class="btn btn-default">&#183;</button>
+						<p class="help-block"></p>
+					</div>
+					<div class="form-group">
+						<label>Pronunciation</label>
+						<input class="pron form-control Required" />
+						<p class="help-block"></p>
+					</div>
+					<div class="form-group">
+						<label>Image</label>
+		  <input onchange="fileSelected(this)" onclick="clickPrevious(this, false)" class="form-control image" type="file" name="fileToUpload" accept="image/*" style="opacity:0;">
+						<label onclick="clickPrevious(this, false)" style="margin-top:-26px;" class="form-control image_label" >Click to Select File</label>
+						<p class="help-block">*This is the image that will appear by default, but can be changed in the lesson builder</p>
+					</div>
+					<div class="form-group">
+						<label>Audio</label>
+		  <input onchange="fileSelected(this)" onclick="clickPrevious(this, true)" class="form-control audio" type="file" name="fileToUpload" accept="audio/*" style="opacity:0;">
+						<label onclick="clickPrevious(this, true)" style="margin-top:-26px;" class="form-control audio_label">Click to Select File</label>
+						<p class="help-block">*This is the audio that will play by default, but can be changed in the lesson builder</p>
+					</div>
+					<div class="pull-right">
+						<a class="lesson-submit btn btn-default" onclick="submitWord(this)">Submit Word</a>
+					</div>
+					<div class="pull-right">
+						<!--a class="lesson-delete btn btn-default" onclick="removeWord(this, true)">Delete Word</a-->
+					</div>
+				</div><!-- coll-large-6 -->
+				<div class="col-lg-6">
+					<br/>
+					<br/>
+					<br/>
+					<br/>
+					<br/>
+					<br/>
+					<br/>
+					<label>Pronunciation Keyboard</label>
+					<br/>
+					<br/>
+					<button  type="button" onclick="append(this)" class="btn btn-default">&#x026A;</button>
+					<button  type="button" onclick="append(this)" class="btn btn-default">&#x028A;</button>
+					<button  type="button" onclick="append(this)" class="btn btn-default">&#x0292;</button>
+					<button  type="button" onclick="append(this)" class="btn btn-default">&#x00E6;</button>
+					<button  type="button" onclick="append(this)" class="btn btn-default">&#x00F0;</button>
+					<button  type="button" onclick="append(this)" class="btn btn-default">&#x014B;</button>
+					<button  type="button" onclick="append(this)" class="btn btn-default">&#x0283;</button>
+					<br/>
+					<br/>
+					<button  type="button" onclick="append(this)" class="btn btn-default">&#x0251;</button>
+					<button  type="button" onclick="append(this)" class="btn btn-default">&#x0254;</button>
+					<button  type="button" onclick="append(this)" class="btn btn-default">&#x0259;</button>
+					<button  type="button" onclick="append(this)" class="btn btn-default">&#x025C;</button>
+					<button  type="button" onclick="append(this)" class="btn btn-default">&#x025B;</button>
+					<button  type="button" onclick="append(this)" class="btn btn-default">&#x028C;</button>
+					<button  type="button" onclick="append(this)" class="btn btn-default">&#x03B8;</button>
+					<br/>
+					<br/>
+					<br/>
+				</div>	
+			<!-- End of 1st Column -->
+			</form>
+		</div><!-- Panel Body -->
+	</div><!-- Panel-collapse -->
+</div><!-- Panel Default -->
+
+</div><!-- Panel Group -->
+<!-- col close -->
+
+</div>
+<!-- /.row -->
+
+</div>
+<!-- /.container-fluid -->
+
+</div>
+<!-- /#page-wrapper -->
+
+</div>
+<!-- /#wrapper -->
+
+<!-- jQuery -->
+<script src="js/jquery.js"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="js/jquery.js"></script>
+<script src="js/assets/javascript/mootools-core-1.3.1.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/assets/javascript/mootools-more-1.3.1.1.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/simple-modal.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/lux.js"></script>
+<script src="js/script/lib/jquery-1.8.2.min.js"></script>
+<script src="js/script/lib/recorderjs/recorder.js"></script>
+<script src="js/word.js"></script>
+
+</body>
+
+</html>
+   

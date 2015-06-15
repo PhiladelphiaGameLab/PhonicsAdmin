@@ -1,0 +1,564 @@
+<html>
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Phonics Lesson Builder</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="css/sb-admin.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="js/assets/css/simplemodal.css" type="text/css" media="screen" title="no title" charset="utf-8">
+    <!-- Morris Charts CSS -->
+    <link href="css/plugins/morris.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="fonts/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+	<style>
+		.cardword:focus { border-width:2px; }	
+	</style>
+<script>
+/* 
+ * This should be a massive for(var key in obj) loop
+ * which references a dictionary or something 
+ */
+function setCardValues(panel, obj, key){ 
+	console.log("=======Setting Card Values=========");
+	if(obj.cardT == undefined){
+		console.log("Special Card");
+		return;
+	}
+	
+	// clone wordspace
+	var wordspace = panel.getElementsByClassName("wordspace")[0];
+	wordspace.style.display = "block";
+	var thiscard = newcard.cloneNode(true);
+	
+	// Set the cardType so the appropriate fields are showing
+	thiscard.getElementsByClassName("cardtype")[0].value = obj["cardT"];
+	changeCardType(thiscard.getElementsByClassName("cardtype")[0]);	
+
+	// fill in word values
+	if(obj["card_rule"] != undefined){
+		thiscard.getElementsByClassName("cardrule")[0].value = obj["card_rule"];
+	}
+	if(obj["word"] != undefined){
+		console.log("THIS IS THE WORD: " + obj["word"]);
+		thiscard.getElementsByClassName("cardword")[0].value = obj["word"].toLowerCase();
+		thiscard.getElementsByClassName("newcardtitle")[0].innerHTML = obj["word"];
+		thiscard.getElementsByClassName("cardword")[0].setAttribute("pron", obj["pron"]);
+		thiscard.getElementsByClassName("cardword")[0].setAttribute("syllable", obj["syllable"]);
+	}
+	if(obj["wordRule"] != undefined){
+		thiscard.getElementsByClassName("cardwordrule")[0].value = obj["wordRule"];
+	}
+	if(obj["conjugateRule"] != undefined){
+		thiscard.getElementsByClassName("cardconjugaterule")[0].value = obj["conjugateRule"];
+	}
+	//-----------------------
+	if(obj["cardsum"] != undefined){
+		thiscard.getElementsByClassName("cardsum")[0].value = obj["cardsum"];
+	}
+	if(obj["cardpre"] != undefined){
+		thiscard.getElementsByClassName("cardpre")[0].value = obj["cardpre"];
+	}
+	if(obj["cardTitle"] != undefined && obj["cardTitle"] != ""){
+		thiscard.getElementsByClassName("cardtitle")[0].value = obj["cardTitle"];
+		thiscard.getElementsByClassName("newcardtitle")[0].innerHTML = obj["cardTitle"];
+	}
+	if(obj["spelling"] != undefined && obj["spelling"][0] != undefined){
+		thiscard.getElementsByClassName("cardspelling0")[0].value = obj["spelling"][0];
+	}
+	if(obj["spelling"] != undefined && obj["spelling"][1] != undefined){
+		thiscard.getElementsByClassName("cardspelling1")[0].value = obj["spelling"][1];
+	}
+	if(obj["spelling"] != undefined && obj["spelling"][2] != undefined){
+		thiscard.getElementsByClassName("cardspelling2")[0].value = obj["spelling"][2];
+	}
+	//----------------------
+
+	// TODO: Need to fix this so that is corresponds to the file names??
+	console.log("FINDING IMAGE 0");
+	console.log(obj["image"]);
+	if(obj["image"] != undefined && obj["image"] != ""){
+		thiscard.getElementsByClassName("cardimage0")[0].files[0] = {"name": obj["image"], set:true};
+		thiscard.getElementsByClassName("cardimage0_label")[0].innerHTML = obj["image"];
+		window.$imageF = thiscard.getElementsByClassName("cardimage0")[0].files;
+		window.$image0 = thiscard.getElementsByClassName("cardimage0")[0];
+	}
+	if(obj["images"] != undefined && obj["images"][0] != undefined && obj["images"][0] != ""){
+		thiscard.getElementsByClassName("cardimage0")[0].files[0] = {"name": obj["images"][0], set:true};
+		thiscard.getElementsByClassName("cardimage0_label")[0].innerHTML = obj["images"][0];
+	}
+	if(obj["images"] != undefined && obj["images"][1] != undefined && obj["images"][1] != ""){
+		thiscard.getElementsByClassName("cardimage1")[0].files[0] = {"name": obj["images"][1], set:true};
+		thiscard.getElementsByClassName("cardimage1_label")[0].innerHTML = obj["images"][1];
+	}
+	if(obj["images"] != undefined && obj["images"][2] != undefined && obj["images"][2] != ""){
+		thiscard.getElementsByClassName("cardimage2")[0].files[0] = {"name": obj["images"][2], set:true};
+		thiscard.getElementsByClassName("cardimage2_label")[0].innerHTML = obj["images"][2];
+	}
+	if(obj["images"] != undefined && obj["images"][3] != undefined && obj["images"][3] != ""){
+		thiscard.getElementsByClassName("cardimage3")[0].files[0] = {"name": obj["images"][3], set:true};
+		thiscard.getElementsByClassName("cardimage3_label")[0].innerHTML = obj["images"][3];
+	}
+	if(obj["audio"] != undefined && obj["audio"] != ""){
+		thiscard.getElementsByClassName("cardaudio")[0].files[0] = {"name": obj["audio"], set:true};
+		thiscard.getElementsByClassName("cardaudio_label")[0].innerHTML = obj["audio"].substr(67);
+	}
+	
+	// append new word
+	wordspace.appendChild(thiscard);	
+}
+
+
+// This is UGLY, and needs to be more dynamic, but it is currently working
+// so beggers can not be choosers in this situation
+function submitcards(element, index, key){
+	console.log("======Submitting Cards 0 =========");
+	update = {
+		 type: "card"
+		,word:element.getElementsByClassName("cardword")[0].value.toLowerCase()
+		,pron:element.getElementsByClassName("cardword")[0].getAttribute("pron")
+		,syllable:element.getElementsByClassName("cardword")[0].getAttribute("syllable")
+		,audio:""
+		,lesson_id: key
+		,order: index+1
+		,card_rule:element.getElementsByClassName("cardrule")[0].value
+		,cardpre:element.getElementsByClassName("cardpre")[0].value
+		,cardsum:element.getElementsByClassName("cardsum")[0].value
+		,cardTitle:element.getElementsByClassName("cardtitle")[0].value
+		,wordRule: element.getElementsByClassName("cardwordrule")[0].value
+		,conjugateRule: element.getElementsByClassName("cardconjugaterule")[0].value
+		,cardType:element.getElementsByClassName("cardtype")[0].value
+		,cardT:element.getElementsByClassName("cardtype")[0].value
+	}
+	console.log("======Submitting Cards 1 =========");
+		
+	var d = new Date();
+	var n = d.getTime();
+	// TODO: For Whatever Reason, the name is not updating properly?
+	// This needs to be resolved 
+	switch(update.cardType){
+		case "CT2":
+			console.log("======Submitting Cards CT2 =========");
+			update.cardType = "recordPage";
+			// one optional audio file
+			var image = element.getElementsByClassName("cardaudio")[0]; 
+			if((image.files.length > 0 || image.files[0] != undefined) && (image.files[0].name != "" && image.files[0].name != undefined)) {
+				var name = n.toString() + (Math.floor(Math.random()*100000000000)).toString() + image.files[0].name; 
+				update.audio = "http://demo.philadelphiagamelab.org/uploads/" + name;
+				AjaxUpload(image, name);
+			}
+			break;	
+		case "CT3":
+			console.log("======Submitting Cards CT3 =========");
+			update.cardType = "matchImagePage";
+			update.images = [];
+			var image = element.getElementsByClassName("cardimage0")[0]; 
+			if(image.files.length > 0){
+				var name =  n.toString() + (Math.floor(Math.random()*100000000000)).toString() + image.files[0].name;
+				update.images[0] = name;
+				AjaxUpload(image, name);
+			}else if(image.files[0] != undefined && image.files[0].name != undefined && image.files[0].name != "" && image.files[0].set){
+				update.images[0] = image.files[0].name;
+			}
+			var image = element.getElementsByClassName("cardimage1")[0]; 
+			if(image.files.length > 0){
+				var name = n.toString() + (Math.floor(Math.random()*100000000000)).toString() +  image.files[0].name;
+				update.images[1] = name;
+				AjaxUpload(image, name);
+			}else if(image.files[0] != undefined && image.files[0].name != undefined && image.files[0].name != "" && image.files[0].set){
+				update.images[1] = image.files[0].name;
+			}
+			var image = element.getElementsByClassName("cardimage2")[0]; 
+			if(image.files.length > 0){
+				var name =  n.toString() + (Math.floor(Math.random()*100000000000)).toString() + image.files[0].name;
+				update.images[2] = name;
+				AjaxUpload(image, name);
+			}else if(image.files[0] != undefined && image.files[0].name != undefined && image.files[0].name != "" && image.files[0].set){
+				update.images[2] = image.files[0].name;
+			}
+			var image = element.getElementsByClassName("cardimage3")[0]; 
+			if(image.files.length > 0){
+				var name =  n.toString() + (Math.floor(Math.random()*100000000000)).toString() + image.files[0].name
+				update.images[3] = name;
+				AjaxUpload(image, name);
+			}else if(image.files[0] != undefined && image.files[0].name != undefined && image.files[0].name != "" && image.files[0].set){
+				update.images[3] = image.files[0].name;
+			}
+			break;	
+		case "CT4":
+			console.log("======Submitting Cards CT4 =========");
+			update.spelling = [];
+			update.cardType = "chooseSpellingPage";
+			update.spelling[0] = element.getElementsByClassName("cardspelling0")[0].value;
+			update.spelling[1] = element.getElementsByClassName("cardspelling1")[0].value
+			update.spelling[2] = element.getElementsByClassName("cardspelling2")[0].value
+			var image = element.getElementsByClassName("cardimage0")[0]; 
+			// if a file has been uploaded, or a file has been set
+			// and the name of the file is not "" and the name of the file is not undefined
+			console.log(image.files[0]); 
+			if(image.files.length > 0){
+				var name = n.toString() + (Math.floor(Math.random()*100000000000)).toString() + image.files[0].name;
+				update.image = name;
+				AjaxUpload(image, name);
+			}else if(image.files[0] != undefined){
+				update.image = image.files[0].name;
+			}
+			break;	
+		case "CT1":
+			console.log("======Submitting Cards CT1 =========");
+			// do nothing
+			update.cardType = "spellWordPage";
+			var image = element.getElementsByClassName("cardaudio")[0]; 
+			if((image.files.length > 0 || image.files[0] != undefined) && (image.files[0].name != "" && image.files[0].name != undefined)) {
+				var name = n.toString() + (Math.floor(Math.random()*100000000000)).toString() + image.files[0].name; 
+				update.audio = "http://demo.philadelphiagamelab.org/uploads/" + name;
+				AjaxUpload(image, name);
+			}
+			break;	
+		case "CT0":
+			console.log("======Submitting Cards CT0 =========");
+			update.cardType = "genericPage";
+			// generic page, no test here.
+			break;
+		default:
+			return;	
+			break;	
+	}
+	console.log("======Submitting Cards 2 =========");
+	Ajax("../Lux/Assets/upsert.php", {access_token:url.access_token, 
+					  "update":update
+					},
+		function(){ // do nothing
+			console.log("======Submitting Cards 3 =========");
+		});
+
+}
+</script>
+
+</head>
+<body>
+
+    <div id="wrapper">
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.html">Phonics</a>
+            </div>
+            <!-- Sidebar Menu Items - These collapse to the responsive navigation menu on small screens -->
+            <div class="collapse navbar-collapse navbar-ex1-collapse">
+                <ul class="nav navbar-nav side-nav">
+                    <li class="active">
+                        <a id="lbuilder" href="builder.html"> Lesson Builder</a>
+                    </li>
+                    <li class="active">
+                        <a id="wbuilder" href="word.html"> Word Builder</a>
+                    </li>
+                    <li class="active">
+                        <a id="sbuilder" href="students.html"> Students</a>
+                    </li>
+		</ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </nav>
+	
+	 <div id="page-wrapper">
+
+            <div class="container-fluid">
+
+                <!-- Page Heading -->
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h1 class="page-header">
+                            Lesson Builder
+                        </h1>
+                    </div>
+                </div>
+
+
+
+
+<!-- EVERYTHING BELOW IS THE ACTUAL PAGE --> 
+
+
+
+
+
+
+		 <!-- /.row -->
+
+<div class="row">
+<div class="col-lg-12">
+
+
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+<!--- DEFAULT PANEL -->
+<div class="panel panel-default lessonpanel" style="display:none">
+
+	<div class="panel-heading" role="tab">
+		<h4 class="panel-title">
+			<a class="lesson-name" data-toggle="collapse" data-parent="accordion" onclick="accordianCollapse(this)">
+			New Lesson
+			</a>
+		</h4>
+	</div><!--panel-heading-->
+
+	<div class="panel-collapse collapse" data-parent="accordion">
+		<div class="panel-body">
+
+
+			<form role="form">
+			<!--- FIRST COLUMN OF LESSON EDITOR -->
+
+				<div class="col-lg-6">
+					<div class="form-group">
+						<label>Lesson Name</label>
+						<input onblur="titleexists(this)"class="lessonname form-control Required" />
+						<p class="help-block">Example: Vowels</p>
+					</div>
+					<div class="form-group">
+						<label>Image Selector</label>
+						<select class="lessonimage form-control Required">
+							<option  selected="selected" value="./images/ACORN.png">Acorn</option>
+							<option value="./images/BOOK_PENCIL.png">Book & Pencil</option>
+							<option value="./images/CAP.png">Cap</option>
+							<option value="./images/HOMEWORK.png">Homework</option>
+							<option value="./images/IDEA_BRAIN.png">Idea</option>
+							<option value="./images/RUNNIN.png">Running</option>
+							<option value="./images/SCHOOL.png">School</option>
+							<option value="./images/SPACE_SHIP.png">Space Ship</option>
+							<option value="./images/SPROUT.png">Plant</option>
+							<option value="./images/SYLLABLES.png">Syllables</option>
+							<option value="./images/TALKY_FACE.png">Speech</option>
+						</select>
+						<p class="help-block">*This is the image that will appear on the lessons page</p>
+					</div>
+					<div class="form-group">
+						<label>Lesson Tier</label>
+						<input class="lessontier form-control Required" min="0" step="1" data-bind="value:replyNumber" />
+						<p class="help-block">*Must be an integer</p>
+					</div>
+					<div class="form-group">
+						<label>Class Number</label>
+						<input class="lessonclass form-control Required" min="0" step="1" data-bind="value:replyNumber" />
+						<p class="help-block">*Must be an integer</p>
+					</div>
+					<div class="form-group">
+						<label>Lesson Summary</label>
+						<textarea rows=5 class="lessonsum form-control Required"></textarea>
+						<p class="help-block">*A summary to appear on the first page of the lesson</p>
+					</div>
+					<div class="pull-right">
+						<a class="lesson-submit btn btn-default" onclick="submitLesson(this)">Update Lesson</a>
+					</div>
+					<div class="pull-right">
+						<a class="lesson-delete btn btn-default" onclick="removeLesson(this, true)">Delete Lesson</a>
+					</div>
+				</div><!-- coll-large-6 -->
+				<br/>
+			<!-- End of 1st Column -->
+
+
+
+			<!-- SECOND COLUMN OF LESSON EDITOR -->
+
+
+				<div class="col-lg-6">
+					<div style="display:none" class="wordspace form-group">
+					<!-- Hidden Word -->
+						<div class="form-group thiscard">
+							<hr/>
+							<label class="control-label newcardtitle" onclick="toggleCard(this)">New Card</label>
+							<label class="pull-right" onclick="pushCard(this,-1)">&#x25BC; </label>
+							<label class="pull-right" onclick="pushCard(this,1)"> &#x25B2;</label>
+							<hr/>
+							<label class="CT0 CT1 CT2 CT3 CT4 CT5 control-label" >Card Type</label>
+							<select onchange="changeCardType(this)" class="cardtype form-control Required">
+								<option  selected="selected" value="CT0">Wordless Card</option>
+								<option value="CT1">Spell Word Card</option>
+								<option value="CT2">Record Card</option>
+								<option value="CT3">Image Match Card</option>
+								<option value="CT4">Choose Spelling Card</option>
+							</select>
+							<p class="CTO CT1 CT2 CT3 CT4 CT5 help-block">*Select the type of card that this will be</p>
+
+							<label class="CT1 CT2 CT3 CT4 CT5 control-label" style="display:none" >Word on Card</label>
+						<input class="CT1 CT2 CT3 CT4 CT5 cardword form-control Required" style="display:none" onkeyup="wordExists(this)" onblur="changeTitle(this)">
+						<div class="suggested">
+							<div class="well well-sm suggestion" style="display:none;padding:5px;margin:0px;">test</div>
+						</div>
+							<p class="CT1 CT2 CT3 CT4 CT5 help-block" style="display:none" >Select the word which will appear on this card</p>
+
+							<label class="CT2 control-label" style="display:none" >Card Pre-Record Word</label>
+							<select class="CT2 cardpre form-control" style="display:none" >
+								<option  selected="selected" value="0">None</option>
+								<option value="apple">Apple</option>
+								<option value="elephant">Elephant</option>
+								<option value="igloo">Igloo</option>
+								<option value="octopus">Octopus</option>
+								<option value="umbrella">Umbrella</option>
+							</select>
+
+							<label class="CT1 CT2 CT3 CT4 CT5 control-label" style="display:none" >Card Rule</label>
+							<select class="CT1 CT2 CT3 CT4 CT5 cardrule form-control Required" style="display:none" >
+								<option  selected="selected" value="0">Rule 0</option>
+								<option value="1">Rule 1</option>
+								<option value="2">Rule 2</option>
+								<option value="3">Rule 3</option>
+								<option value="4">Rule 4</option>
+								<option value="5">Rule 5</option>
+								<option value="6">Rule 6</option>
+								<option value="7">Rule 7</option>
+								<option value="8">Rule 8</option>
+								<option value="9">Rule 9</option>
+								<option value="10">Rule 10</option>
+							</select>
+							<p class="CT1 CT2 CT3 CT4 CT5 help-block" style="display:none" > </p>
+
+
+							<label class="CT1 CT2 CT3 CT4 CT5 control-label" style="display:none" >Word Rule Being Taught</label>
+							<select class="CT1 CT2 CT3 CT4 CT5 cardwordrule form-control Required" style="display:none" >
+								<option  selected="selected" value="0">Rule 0</option>
+								<option value="1">Rule 1</option>
+								<option value="2">Rule 2</option>
+								<option value="3">Rule 3</option>
+								<option value="4">Rule 4</option>
+								<option value="5">Rule 5</option>
+								<option value="6">Rule 6</option>
+								<option value="7">Rule 7</option>
+								<option value="8">Rule 8</option>
+								<option value="9">Rule 9</option>
+								<option value="10">Rule 10</option>
+							</select>
+							<p class="CT1 CT2 CT3 CT4 CT5 help-block" style="display:none" >Select the rule which is appropriate for this card</p>
+
+
+							<label class="CT1 CT2 CT3 CT4 CT5 control-label" style="display:none" >Conjugate Rule Being Taught</label>
+							<select class="CT1 CT2 CT3 CT4 CT5 cardconjugaterule form-control Required" style="display:none" >
+								<option  selected="selected" value="0">Rule 0</option>
+								<option value="0">Rule 1</option>
+								<option value="1">Rule 2</option>
+								<option value="2">Rule 3</option>
+								<option value="3">Rule 4</option>
+								<option value="4">Rule 5</option>
+								<option value="5">Rule 6</option>
+								<option value="6">Rule 7</option>
+								<option value="7">Rule 8</option>
+								<option value="8">Rule 9</option>
+								<option value="9">Rule 10</option>
+							</select>
+							<p class="CT1 CT2 CT3 CT4 CT5 help-block" style="display:none" >Select the Conjugate Rule that applies to this card</p>
+							
+							<label class="control-label CT3 CT4 CT5" style="display:none"  >Card Image (correct)</label>
+							<input onchange="fileSelected(this)"  onclick="clickPrevious(this, false)" class="form-control CT3 CT4 CT5 cardimage0 Required" type="file" name="fileToUpload" accept="image/*" style="display:none; opacity:0">
+							<label onclick="clickPrevious(this, false)" class="form-control cardimage0_label CT3 CT4 CT5" style="margin-top:-26px;display:none">Click to Select File</label>
+
+
+							<label class="control-label CT0">Card Title</label>
+							<input class="cardtitle CT0 form-control Required" onblur="changeTitle(this)">
+							
+							<label class="control-label CT0">Card Summary</label>
+							<textarea rows=5 class="cardsum CT0 form-control Required"></textarea>
+
+							<label class="control-label CT1 CT2" style="display:none"  >Word Audio (optional)</label>
+							<input onchange="fileSelected(this)"  onclick="clickPrevious(this, true)"class="form-control  CT1 CT2 cardaudio" type="file" name="fileToUpload" accept="audio/*;capture=microphone" style="display:none; opacity:0"  >
+							<label onclick="clickPrevious(this, true)" class="form-control cardaudio_label CT1 CT2" style="margin-top:-26px;display:none">Click to Select File</label>
+
+							<label class="control-label CT3" style="display:none"  >Card Image (incorrect)</label>
+							<input onchange="fileSelected(this)" onclick="clickPrevious(this, false)" class="form-control  CT3 cardimage1 Required" type="file" name="fileToUpload" accept="image/*" style="display:none; opacity:0"  >
+							<label onclick="clickPrevious(this, false)" class="form-control cardimage1_label CT3" style="margin-top:-26px;display:none">Click to Select File</label>
+
+							<label class="control-label CT3" style="display:none"  >Card Image (incorrect & optional)</label>
+							<input onchange="fileSelected(this)" onclick="clickPrevious(this, false)" class="form-control  CT3 cardimage2" type="file" name="fileToUpload" accept="image/*" style="display:none; opacity:0"  >
+							<label onclick="clickPrevious(this, false)" class="form-control cardimage2_label CT3" style="margin-top:-26px;display:none">Click to Select File</label>
+
+							<label class="control-label CT3" style="display:none"  >Card Image (incorrect & optional)</label>
+							<input onhange="fileSelected(this)" onclick="clickPrevious(this, false)" class="form-control  CT3 cardimage3" type="file" name="fileToUpload" accept="image/*" style="display:none; opacity:0"  >
+							<label onclick="clickPrevious(this, false)" class="form-control cardimage3_label CT3" style="margin-top:-26px;display:none">Click to Select File</label>
+							
+							<label class="control-label CT4" style="display:none"   >Incorrect Spelling</label>
+							<input class="form-control  CT4 cardspelling0 Required" style="display:none"  >
+
+							<label class="control-label CT4" style="display:none" >Incorrect Spelling (optional)</label>
+							<input class="form-control  CT4 cardspelling1" style="display:none"  >
+
+							<label class="control-label CT4" style="display:none" >Incorrect Spelling (optional)</label>
+							<input class="form-control  CT4 cardspelling2" style="display:none"  >
+
+
+						</div><!-- This Card --> 
+					<!-- End of Word Section -->
+					</div><!-- Word Space --> 
+					<a class="btn" onclick="addWord(this)">
+						<span class="glyphicon glyphicon-plus">
+					</a>
+					<a class="btn" onclick="subWord(this)">
+						<span class="glyphicon glyphicon-minus">
+					</a>
+					<div class="pull-right">
+						<a class="btn btn-default" onclick="checkWords(this)">Check Words</a>
+					</div>
+			<!-- End of 2nd Column -->
+			</form>
+		</div><!-- Panel Body -->
+	</div><!-- Panel-collapse -->
+</div><!-- Panel Default -->
+
+</div><!-- Panel Group -->
+<!-- col close -->
+
+</div>
+<!-- /.row -->
+
+</div>
+<!-- /.container-fluid -->
+
+</div>
+<!-- /#page-wrapper -->
+
+</div>
+<!-- /#wrapper -->
+
+<!-- jQuery -->
+<script src="js/jquery.js"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="js/jquery.js"></script>
+<script src="js/assets/javascript/mootools-core-1.3.1.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/assets/javascript/mootools-more-1.3.1.1.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/simple-modal.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/lux.js"></script>
+<script src="js/script/lib/jquery-1.8.2.min.js"></script>
+<script src="js/script/lib/recorderjs/recorder.js"></script>
+<script src="js/builder.js"></script>
+
+
+</body>
+
+</html>
+   
+
